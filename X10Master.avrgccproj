@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>5.0</ProjectVersion>
+    <ProjectGuid>2bfbd90a-2c6c-4722-86f6-0572ddd13928</ProjectGuid>
+    <avrdevice>attiny461</avrdevice>
+    <avrdeviceseries>none</avrdeviceseries>
+    <OutputType>Executable</OutputType>
+    <Language>C</Language>
+    <OutputFile>X10Master.elf</OutputFile>
+    <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
+    <UseGlobalToolchain>False</UseGlobalToolchain>
+    <ToolchainDirPath>C:\WinAVR\bin</ToolchainDirPath>
+    <MakeDirPath>C:\WinAVR\utils\bin</MakeDirPath>
+    <GlobalToolchainPath>C:\Program Files\Atmel\AVR Studio 5.0\AVR ToolChain\bin</GlobalToolchainPath>
+    <AvrGccProjectExtensions>
+    </AvrGccProjectExtensions>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'default' ">
+    <OutputPath>bin\default\</OutputPath>
+    <MemorySettings>
+      <MemorySegments xmlns="">
+  <InitialStack IsEnabled="0">
+    <Address />
+  </InitialStack>
+</MemorySegments>
+    </MemorySettings>
+    <ToolchainSettings>
+      <AvrGcc xmlns="">
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>true</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>true</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>F_CPU=8000000UL</Value>
+    </ListValues>
+  </avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>true</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>true</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.warnings.AllWarnings>true</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcc.compiler.miscellaneous.OtherFlags>-gdwarf-2 -std=gnu99 </avrgcc.compiler.miscellaneous.OtherFlags>
+  <avrgcc.assembler.general.AssemblerFlags>-Wall -gdwarf-2 -std=gnu99          -DF_CPU=8000000UL -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums</avrgcc.assembler.general.AssemblerFlags>
+</AvrGcc>
+    </ToolchainSettings>
+  </PropertyGroup>
+  <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\AvrGCC.targets" />
+  <ItemGroup>
+    <Compile Include="commands.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="logevents.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ringbuffer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="usiTwiSlave.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="main.c">
+      <SubType>compile</SubType>
+      <CustomCompilationSetting Condition="'$(Configuration)' == 'default'">
+      </CustomCompilationSetting>
+    </Compile>
+    <Compile Include="ringbuffer.c">
+      <SubType>compile</SubType>
+      <CustomCompilationSetting Condition="'$(Configuration)' == 'default'">
+      </CustomCompilationSetting>
+    </Compile>
+    <Compile Include="usiTwiSlave.c">
+      <SubType>compile</SubType>
+      <CustomCompilationSetting Condition="'$(Configuration)' == 'default'">
+      </CustomCompilationSetting>
+    </Compile>
+  </ItemGroup>
+</Project>
