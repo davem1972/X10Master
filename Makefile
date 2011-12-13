@@ -2,7 +2,8 @@
 #fuse settings are hard-coded into the bottom lines; change them only with care.
 
 PRG            = X10Master
-OBJ            = main.o usiTwiSlave.o ringbuffer.o
+SRC            = main.c usiTwiSlave.c ringbuffer.c
+OBJ            = $(SRC:%.c=%.o)
 MCU_TARGET     = attiny461 #attiny2313 
 PROGRAMMER     = usbtiny #avrispmkII 
 AVRDUDE_TARGET = t2313 
@@ -18,6 +19,8 @@ ifdef DEBUG
 DEFS           += -DDEBUG=1
 endif
 
+CLI_SRC 	   = x10cli.c
+CLI_OBJ        = $(CLISRC:%.c=%.o)
 
 # You should not have to change anything below here.
 
@@ -93,3 +96,9 @@ install: all
 
 # Original fuse settings: 	
 #	 -U lfuse:w:0x64:m  -U hfuse:w:0xDF:m	-U efuse:w:0xff:m	
+
+
+# Rule to build command line tool
+x10cli: $(CLI_OBJ)
+	$(CLI_CC) $(CLI_CFLAGS) $(CLI_LDFLAGS) -o $@ $^ $(CLI_LIBS)
+
