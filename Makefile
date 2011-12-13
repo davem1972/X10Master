@@ -19,8 +19,9 @@ ifdef DEBUG
 DEFS           += -DDEBUG=1
 endif
 
-CLI_SRC 	   = x10cli.c
-CLI_OBJ        = $(CLISRC:%.c=%.o)
+CLI_TARGET     = x10cli
+CLI_SRC        = x10cli.c
+CLI_OBJ        = $(CLI_SRC:%.c=%.o)
 
 # You should not have to change anything below here.
 
@@ -42,6 +43,7 @@ $(PRG).elf: $(OBJ)
 clean:
 	rm -rf *.o $(PRG).elf *.eps *.png *.pdf *.bak *.hex *.bin *.srec
 	rm -rf *.lst *.map $(EXTRA_CLEAN_FILES)
+	rm $(CLI_TARGET)
 
 lst:  $(PRG).lst
 
@@ -99,6 +101,6 @@ install: all
 
 
 # Rule to build command line tool
-x10cli: $(CLI_OBJ)
+$(CLI_TARGET): $(CLI_SRC)
 	$(CLI_CC) $(CLI_CFLAGS) $(CLI_LDFLAGS) -o $@ $^ $(CLI_LIBS)
 
