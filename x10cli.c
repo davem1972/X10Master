@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <limits.h>
 #include <sys/ioctl.h>
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
@@ -18,20 +19,25 @@
 
 //#define I2C_DEBUG 1
 
-int i2c_debug = 0;
-
-int i2c_fd               = -1;	 // I2C device handle.
+int i2c_debug            = 0;
+int i2c_bus              = 0;    // Default I2C bus
+int i2c_fd               = -1;   // I2C device handle.
 unsigned char slave_addr = 0x28; // slave address
 
 int init_i2c()
 {
-	if((i2c_fd = open("/dev/i2c-0",O_RDWR)) < 0) {
-		perror("could not open device");
+    char device[PATH_MAX];
+
+    sprintf(device, "/dev/i2c-%d", i2c_bus);
+
+    printf("init_i2c: Opening device %s\n", device);
+
+    if((i2c_fd = open(device,O_RDWR)) < 0) {
+        perror("could not open device");
         return -1;
-	} else {
-		printf("opened device i2c-0\n");
+    } else {
         return 0;
-	}
+    }
 }
 
 //
@@ -39,44 +45,44 @@ int init_i2c()
 //
 int send_i2c(char * w, int w_len, char * r, int r_len)
 {
-	struct i2c_rdwr_ioctl_data msgset;
-	struct i2c_msg msg[2];
+    struct i2c_rdwr_ioctl_data msgset;
+    struct i2c_msg             msg[2];
 
-	msg[0].addr = slave_addr;
-	msg[0].flags = 0;
-	msg[0].len = w_len;
-	msg[0].buf = w;
+    msg[0].addr = slave_addr;
+    msg[0].flags = 0;
+    msg[0].len = w_len;
+    msg[0].buf = w;
 
-	msg[1].addr = slave_addr;
-	msg[1].flags = I2C_M_RD;
-	msg[1].len = r_len;
-	msg[1].buf = r;
+    msg[1].addr = slave_addr;
+    msg[1].flags = I2C_M_RD;
+    msg[1].len = r_len;
+    msg[1].buf = r;
 
-	msgset.msgs = msg;
-	msgset.nmsgs = 2;
+    msgset.msgs = msg;
+    msgset.nmsgs = 2;
 
 
-	if(ioctl(i2c_fd,I2C_RDWR,&msgset) < 0) {
-		perror("ioctl");
-		printf("tried to send: ");
-		int i;
-		for (i = 0; i < w_len; ++i)
-			printf("%02X ", w[i]);
-		printf("\n");
-		return -1;
-	}
+    if(ioctl(i2c_fd,I2C_RDWR,&msgset) < 0) {
+        perror("ioctl");
+        printf("tried to send: ");
+        int i;
+        for (i = 0; i < w_len; ++i)
+            printf("%02X ", w[i]);
+        printf("\n");
+        return -1;
+    }
 
-	if (i2c_debug) {
-		int i;
-		for (i = 0; i < w_len; ++i)
-			printf("%02X ", w[i]);
-		printf("=> ");
-		for (i = 0; i < r_len; ++i)
-			printf("%02X ", r[i]);
-		printf("\n");
-	}
+    if (i2c_debug) {
+        int i;
+        for (i = 0; i < w_len; ++i)
+            printf("%02X ", w[i]);
+        printf("=> ");
+        for (i = 0; i < r_len; ++i)
+            printf("%02X ", r[i]);
+        printf("\n");
+    }
 
-	return 0;
+    return 0;
 }
 
 // Ping the i2c device
@@ -84,18 +90,18 @@ int send_i2c(char * w, int w_len, char * r, int r_len)
 int do_ping(void)
 {
     unsigned char commands[]  = { X10_MASTER_COMMAND_PING };
-	unsigned char buffer[4+1] = { '?', '?', '?', '?', 0 };
+    unsigned char buffer[4+1] = { '?', '?', '?', '?', 0 };
 
     printf("do_ping: Sending PING\n");
 
     // Read length
-	if (send_i2c(commands, sizeof(commands), buffer, 4) < 0) {
+    if (send_i2c(commands, sizeof(commands), buffer, 4) < 0) {
         return -1;
     }
 
     printf("    -> %s\n", buffer);
 
-	return 0;
+    return 0;
 }
 
 // Read the device uptime (in ticks)
@@ -103,12 +109,12 @@ int do_ping(void)
 int do_uptime(void)
 {
     unsigned char commands[] = { X10_MASTER_COMMAND_UPTIME };
-	unsigned char buffer[4]  = { 0, 0, 0, 0 };
+    unsigned char buffer[4]  = { 0, 0, 0, 0 };
 
     printf("do_uptime: Sending UPTIME\n");
 
     // Dispatch UPTIME request
-	if (send_i2c(commands, sizeof(commands), buffer, 4) < 0) {
+    if (send_i2c(commands, sizeof(commands), buffer, 4) < 0) {
         return -1;
     }
 
@@ -118,7 +124,7 @@ int do_uptime(void)
                           | (buffer[3] << 24);
     printf("    -> %u\n", uptime);
 
-	return 0;
+    return 0;
 }
 
 // Read the device status
@@ -126,12 +132,12 @@ int do_uptime(void)
 int do_status(void)
 {
     unsigned char commands[] = { X10_MASTER_COMMAND_STATUS };
-	unsigned char status     = 0;
+    unsigned char status     = 0;
 
     printf("do_status: Sending STATUS\n");
 
     // Dispatch STATUS request
-	if (send_i2c(commands, sizeof(commands), &status, 1) < 0) {
+    if (send_i2c(commands, sizeof(commands), &status, 1) < 0) {
         return -1;
     }
 
@@ -139,7 +145,7 @@ int do_status(void)
     if (status & 0x01) printf("        LOGOVERFLOW\n");
     if (status & 0x02) printf("        X10ERROR\n");
 
-	return 0;
+    return 0;
 }
 
 // Send a trash command
@@ -147,25 +153,25 @@ int do_status(void)
 int do_trash(void)
 {
     unsigned char commands[] = { '@' };
-	unsigned char response = 0;
+    unsigned char response = 0;
 
     printf("do_trash(): Sending trash!\n");
 
     // Dispatch STATUS request
-	if (send_i2c(commands, sizeof(commands), &response, 1) < 0) {
+    if (send_i2c(commands, sizeof(commands), &response, 1) < 0) {
         return -1;
     }
 
     printf("    -> %02lX\n", response);
 
-	return 0;
+    return 0;
 }
 
 int do_readlog()
 {
     unsigned char commands[] = { X10_MASTER_COMMAND_READLOG };
     unsigned char len        = 0;
-	unsigned char buffer[64];
+    unsigned char buffer[64];
     int i;
 
     printf("do_readlog: Sending READLOG\n");
@@ -205,16 +211,30 @@ int do_readlog()
 
 int main(int argc, char *argv[])
 {
-	int i;
+    int    i;
     time_t now;
 
     i2c_debug = 1;
+
+
+    for (i = 1; i < argc; i++) {
+        if (argv[i][0] == '-') {
+            switch (argv[i][1]) {
+            case 'b': // Different bus
+                i2c_bus = atoi(argv[++i]);
+                break;
+            default:
+                fprintf(stderr, "Usage: %s: [-b <bus>]\n", argv[0]);
+                return 1;
+            }
+        }
+    }
 
     time(&now);
 
     printf("i2cx10: %s\nSlave Addr: %02X\n", ctime(&now), slave_addr);
 
-	if (init_i2c() < 0) {
+    if (init_i2c() < 0) {
         return 1;
     }
 
@@ -227,7 +247,7 @@ int main(int argc, char *argv[])
     close(i2c_fd);
 
 
-	return 0;
+    return 0;
 }
 
 /*
